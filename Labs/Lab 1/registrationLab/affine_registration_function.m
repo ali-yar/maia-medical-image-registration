@@ -1,4 +1,3 @@
-%returns the metric
 function [e]=affine_registration_function(par,scale,Imoving,Ifixed,mtype,ttype)
 % This function affine_registration_image, uses affine transfomation of the
 % 3D input volume and calculates the registration error after transformation.
@@ -29,16 +28,21 @@ function [e]=affine_registration_function(par,scale,Imoving,Ifixed,mtype,ttype)
 % example,
 %
 % Function is written by D.Kroon University of Twente (July 2008)
-x=par.*scale;
+x = par .* scale;
 
-    switch ttype
-        case 'r'
-        % Make the affine transformation matrix
-         M=[ cos(x(3)) sin(x(3)) x(1);
-            -sin(x(3)) cos(x(3)) x(2);
-                0           0      1];
- 
-    end
+% Make the affine transformation matrix
+switch ttype
+    case 'r'
+        
+        M = [ cos(x(3)) sin(x(3)) x(1);
+             -sin(x(3)) cos(x(3)) x(2);
+               0           0      1 ];
+	case 'a'
+        M = [ x(3)  x(4)    x(1);
+             x(5)  x(6)	x(2);
+              0       0 	1  ];
+
+end
 
 
 I3=affine_transform_2d_double(double(Imoving),double(M),0); % 3 stands for cubic interpolation

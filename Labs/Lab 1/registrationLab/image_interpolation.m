@@ -107,7 +107,7 @@ switch(lower(Interpolation))
 end
 
 Iout=zeros([ImageSize(1:2) lo]);
-for i=1:lo; % Loop incase of RGB
+for i= 1:lo % Loop incase of RGB
     Iin_one=Iin(:,:,i);
     switch(lower(Interpolation))
         case 'nearest'

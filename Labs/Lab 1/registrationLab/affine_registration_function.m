@@ -30,51 +30,28 @@ function [e]=affine_registration_function(par,scale,Imoving,Ifixed,mtype,ttype)
 % Function is written by D.Kroon University of Twente (July 2008)
 x = par .* scale;
 
-% Make the affine transformation matrix
-switch ttype
-    case 'r'
-        
-        M = [ cos(x(3)) sin(x(3)) x(1);
-             -sin(x(3)) cos(x(3)) x(2);
-               0           0      1 ];
-	case 'a1'
-        M = [ x(3)  x(4)    x(1);
-             x(5)  x(6)	x(2);
-              0       0 	1  ];
-    
-    case 'a2'
-        Rot = [ cos(x(3)) sin(x(3)) 0;
-               -sin(x(3)) cos(x(3)) 0;
-                 0           0      1 ];
-        Transl = [ 1    0   x(1);
-                  0    1   x(2);
-                  0    0    1 ];
-        Scale = [  x(4)  0    0;
-                   0     x(5)  0;
-                   0     0     1 ];
-        ShearX = [ 1    x(6)   0;
-                   0     1     0;
-                   0     0     1 ];
-        ShearY = [ 1     0     0;
-                   x(7)  1     0;
-                   0     0     1 ];
-        M = Rot * Transl * Scale * ShearX * ShearY;
-end
+% get the affine transformation matrix
+M = transformation_matrix(ttype, x);
 
-
-I3=affine_transform_2d_double(double(Imoving),double(M),0); % 3 stands for cubic interpolation
+%  apply transformation of the moving img (3 stands for cubic interpolation)
+I3 = affine_transform_2d_double(double(Imoving),double(M),0); 
 
 % metric computation
 switch mtype
     case 'sd' %squared differences
-        e = sum((I3(:)-Ifixed(:)).^2)/numel(I3);
-    case 'cc'
+        e = sum((I3(:) - Ifixed(:)).^2) / numel(I3);
+    case 'cc' % normalized intensity cross-correlation
         I3_mean = mean(I3(:));
         Ifixed_mean = mean(Ifixed(:));
         nom = sum( (I3(:) - I3_mean) .* (Ifixed(:) - Ifixed_mean) );
         denom = sqrt(sum((I3(:) - I3_mean).^2) .* sum((Ifixed(:) - Ifixed_mean).^2)) ;
         e = - nom / denom;
-        
+    case 'gcc' % normalized gradient cross-correlation
+        [I3_fx,I3_fy] = gradient(I3);
+        [Ifixed_fx,Ifixed_fy] = gradient(Ifixed);
+        nom = sum((I3_fx .* Ifixed_fy) + (Ifixed_fy .* I3_fy));
+        denom = sqrt(sum((I3_fx).^2 + (I3_fy).^2) .* sum((Ifixed_fx).^2 + (Ifixed_fy).^2)) ;
+        e =  nom/denom;
     otherwise
         error('Unknown metric type');
 end
